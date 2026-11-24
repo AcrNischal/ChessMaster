@@ -29,6 +29,7 @@ template <class T, class V> void _print(multimap<T, V> v) { cerr << "[ "; for (a
 template <class T> void _print(unordered_set<T> v) { cerr << "[ "; for (T i : v) { _print(i); cerr << " "; } cerr << "]"; }
 template <class T> void _print(unordered_multiset<T> v) { cerr << "[ "; for (T i : v) { _print(i); cerr << " "; } cerr << "]"; }
 template <class T, class V> void _print(unordered_map<T, V> v) { cerr << "[ "; for (auto i : v) { _print(i); cerr << " "; } cerr << "]"; }
+void castlePreventingSquare(bool isWhite);
 
 
 
@@ -151,6 +152,54 @@ bool isMyPiece(string position, bool isWhite){
     if(find_ascii(live_board[position][0])>=97 && find_ascii(live_board[position][0])<=122 && !isWhite) return true;
     return false;
 }
+
+// Split gareko pieces lai black ko lai black maa white ko lai white maa
+// vector<string> whitePieces;
+// vector<string> blackPieces;
+
+// void splitPieces(){
+//     whitePieces.clear();
+//     blackPieces.clear();
+
+//     for(int i=7; i>=0; i--){
+//         for(int j=0; j<8; j++){
+//             string square_notation = FILES[j] + RANKS[i]; 
+//             if(find_ascii(live_board[square_notation][0])>=65 && find_ascii(live_board[square_notation][0])<=90) whitePieces.push_back(square_notation);
+//             if(find_ascii(live_board[square_notation][0])>=97 && find_ascii(live_board[square_notation][0])<=122) blackPieces.push_back(square_notation);
+//         }
+//     }
+
+// }
+
+
+// Adding variables to store if oppont reserve square
+vector<string> whitePreventsCastleSquare;
+vector<string> blackPreventsCastleSquare;
+
+bool temp_ban_castle_white = false;
+bool temp_ban_castle_queen_white = false;
+bool temp_ban_castle_black = false;
+bool temp_ban_castle_queen_black = false;
+bool temp_find_attrack_square = false;
+
+void isCastlePrevent(bool isWhite){
+    if(isWhite){
+        // prevent gareko castle garna black lai white ko legal move bata
+        for(int i=0; i<whitePreventsCastleSquare.size(); i++){
+            if(whitePreventsCastleSquare[i]=="E8" || whitePreventsCastleSquare[i]=="F8" || whitePreventsCastleSquare[i]=="G8") temp_ban_castle_black = true;
+            if(whitePreventsCastleSquare[i]=="E8" || whitePreventsCastleSquare[i]=="D8" || whitePreventsCastleSquare[i]=="C8" || whitePreventsCastleSquare[i]=="B8") temp_ban_castle_queen_black = true;
+            
+        }
+    }else{
+        // aba white ko lagi thokeko
+        for(int i=0; i<blackPreventsCastleSquare.size(); i++){
+            if(blackPreventsCastleSquare[i]=="E1" ||blackPreventsCastleSquare[i]=="F1" ||blackPreventsCastleSquare[i]=="G1") temp_ban_castle_white = true;
+            if(blackPreventsCastleSquare[i]=="E1" ||blackPreventsCastleSquare[i]=="D1" ||blackPreventsCastleSquare[i]=="C1" || blackPreventsCastleSquare[i]=="B1") temp_ban_castle_queen_white = true;
+        }
+
+    }
+}
+
 
 class PieceMove{
     public:
@@ -426,42 +475,60 @@ class PieceMove{
         }
 
 
-        // See castle rights
-        if(isWhite){
-            // cast;e for white
-            if(isLegalCastle){
-                // seeing empty space to validate castle
-                if(live_board["F1"]=="." && live_board["G1"]=="."){
-                    LEGALMOVE.push_back("G1");
-                    // castleMoves.push_back("G1");
-                }
-            }
-            if(isLegalCastleQueen){
-                // seeing empty space to validate castle
-                if(live_board["B1"]=="." && live_board["C1"]=="." && live_board["D1"]=="."){
-                    LEGALMOVE.push_back("C1");
-                    // castleMoves.push_back("C1");
-                }
-            }
-
-        }else{
-            // Black Castle
-            if(isLegalCastleBlack){
-                // seeing empty space to validate castle
-                if(live_board["F8"]=="." && live_board["G8"]=="."){
-                    LEGALMOVE.push_back("G8");
-                    // castleMoves.push_back("G8");
-                }
-            }
-            if(isLegalCastleQueenBlack){
-                // seeing empty space to validate castle
-                if(live_board["B8"]=="." && live_board["C8"]=="." && live_board["D8"]=="."){
-                    LEGALMOVE.push_back("C8");
-                    // castleMoves.push_back("C8");
-                }
+        // castle ko yeha dekhi muni handle xa
+        if(!temp_find_attrack_square){
+            if(isLegalCastle || isLegalCastleQueen || isLegalCastleBlack || isLegalCastleQueenBlack){
+                castlePreventingSquare(!isWhite);
+                isCastlePrevent(!isWhite);
+                
             }
 
 
+            // See castle rights
+            if(isWhite){
+                // cast;e for white
+                if(isLegalCastle && !temp_ban_castle_white){
+                    // seeing empty space to validate castle
+                    if(live_board["F1"]=="." && live_board["G1"]=="."){
+                        LEGALMOVE.push_back("G1");
+                        // castleMoves.push_back("G1");
+                    }
+                }
+                if(isLegalCastleQueen && !temp_ban_castle_queen_white){
+                    // seeing empty space to validate castle
+                    if(live_board["B1"]=="." && live_board["C1"]=="." && live_board["D1"]=="."){
+                        LEGALMOVE.push_back("C1");
+                        // castleMoves.push_back("C1");
+                    }
+                }
+
+            }else{
+                // Black Castle
+                if(isLegalCastleBlack && !temp_ban_castle_black){
+                    // seeing empty space to validate castle
+                    if(live_board["F8"]=="." && live_board["G8"]=="."){
+                        LEGALMOVE.push_back("G8");
+                        // castleMoves.push_back("G8");
+                    }
+                }
+                if(isLegalCastleQueenBlack && !temp_ban_castle_queen_black){
+                    // seeing empty space to validate castle
+                    if(live_board["B8"]=="." && live_board["C8"]=="." && live_board["D8"]=="."){
+                        LEGALMOVE.push_back("C8");
+                        // castleMoves.push_back("C8");
+                    }
+                }
+
+
+            }
+
+
+
+            // Reset gareko castle namilne square opponent lae cover gareko belaa
+            temp_ban_castle_white = false;
+            temp_ban_castle_queen_white = false;
+            temp_ban_castle_black = false;
+            temp_ban_castle_queen_black = false;
         }
 
         debug(LEGALMOVE);
@@ -632,6 +699,66 @@ void castle(bool kingside, bool isWhite){
     }
 }
 
+
+
+// Finding piece if it prevents castle or not 
+void castlePreventingSquare(bool isWhite){
+    temp_find_attrack_square = true;
+    whitePreventsCastleSquare.clear();
+    blackPreventsCastleSquare.clear();
+    PieceMove LegalMove;
+
+    // aba yeha sabai white le prevnt gareko garne ho
+    for(int i=7; i>=0; i--){
+        for(int j=0; j<8; j++){
+            string square_notation = FILES[j] + RANKS[i];
+            vector<string> moves;
+
+            if(isWhite && find_ascii(live_board[square_notation][0])>=65 && find_ascii(live_board[square_notation][0])<=90){
+                if(live_board[square_notation]=="P"){
+                    string capture_left, captre_right;
+                    capture_left = square_notation[0]-1; 
+                    capture_left += square_notation[1]+1;
+                    captre_right = square_notation[0]+1; 
+                    captre_right += square_notation[1]+1;
+                    if(valid_board_move(capture_left)) moves.push_back(capture_left);
+                    if(valid_board_move(captre_right)) moves.push_back(captre_right);
+                }
+                else if(live_board[square_notation]=="N") moves = LegalMove.kinghtMove(square_notation, true);
+                else if(live_board[square_notation]=="B") moves = LegalMove.bishopMove(square_notation, true);
+                else if(live_board[square_notation]=="Q") moves = LegalMove.queenMove(square_notation, true);
+                else if(live_board[square_notation]=="K") moves = LegalMove.kingMove(square_notation, true);
+                else if(live_board[square_notation]=="R") moves = LegalMove.rookMove(square_notation, true);
+                whitePreventsCastleSquare.insert(whitePreventsCastleSquare.end(), moves.begin(), moves.end());
+            }
+            if(!isWhite && find_ascii(live_board[square_notation][0])>=97 && find_ascii(live_board[square_notation][0])<=122){
+                if(live_board[square_notation]=="p"){
+                    string capture_left, captre_right;
+                    capture_left = square_notation[0]-1; 
+                    capture_left += square_notation[1]-1;
+                    captre_right = square_notation[0]+1; 
+                    captre_right += square_notation[1]-1;
+                    if(valid_board_move(capture_left)) moves.push_back(capture_left);
+                    if(valid_board_move(captre_right)) moves.push_back(captre_right);
+                }
+                else if(live_board[square_notation]=="n") moves = LegalMove.kinghtMove(square_notation, false);
+                else if(live_board[square_notation]=="b") moves = LegalMove.bishopMove(square_notation, false);
+                else if(live_board[square_notation]=="q") moves = LegalMove.queenMove(square_notation, false);
+                else if(live_board[square_notation]=="k") moves = LegalMove.kingMove(square_notation, false);
+                else if(live_board[square_notation]=="r") moves = LegalMove.rookMove(square_notation, false);
+                blackPreventsCastleSquare.insert(blackPreventsCastleSquare.end(), moves.begin(), moves.end());
+            }
+            
+        }
+    }
+    temp_find_attrack_square = false;
+}
+
+
+
+
+
+
 void showBoard(){
     for(int i=7; i>=0; i--){
         for(int j=0; j<8; j++){
@@ -746,6 +873,7 @@ int main(){
 
 
         // Move core logic
+        bool moved = false;
         if(is_white_turn || ascii_of_piece<=92){
 
             for(int i=0; i<=moves.size(); i++){
@@ -766,6 +894,7 @@ int main(){
                         enpassent_piece_square+=move_square[1]-1;
                         live_board[enpassent_piece_square] = ".";
                     }
+                    moved = true; 
                     is_white_turn = false;
                     break;
                 }
@@ -792,6 +921,7 @@ int main(){
                         enpassent_piece_square+=move_square[1]+1;
                         live_board[enpassent_piece_square] = ".";
                     }
+                    moved = true; 
                     is_white_turn = true;
                     break;
                 }
@@ -801,21 +931,26 @@ int main(){
 
         // Adding protocol for white castle {like if i move any square mean i have touched already that piece}
         // White
-        if(piece_square=="A1") isLegalCastleQueen = false;
-        if(piece_square=="H1") isLegalCastle = false;
-        if(piece_square=="E1"){ isLegalCastleQueen = false; isLegalCastle = false;}
-        // Black
-        if(piece_square=="A8") isLegalCastleQueenBlack = false;
-        if(piece_square=="H8") isLegalCastleBlack = false;
-        if(piece_square=="e8"){ isLegalCastleQueenBlack = false; isLegalCastleBlack = false;}
-
-
+        if(moved){
+            if(piece_square=="A1") isLegalCastleQueen = false;
+            if(piece_square=="H1") isLegalCastle = false;
+            if(piece_square=="E1"){ isLegalCastleQueen = false; isLegalCastle = false;}
+            // Black
+            if(piece_square=="A8") isLegalCastleQueenBlack = false;
+            if(piece_square=="H8") isLegalCastleBlack = false;
+            if(piece_square=="E8"){ isLegalCastleQueenBlack = false; isLegalCastleBlack = false;}
+            // if piece capture voing than prevent castle garing
+            if(move_square=="A1") isLegalCastleQueen = false;
+            if(move_square=="H1") isLegalCastle = false;
+            if(move_square=="A8") isLegalCastleQueenBlack = false;
+            if(move_square=="H8") isLegalCastleBlack = false;
+        }
         // showing the move history
         for (size_t i = 0; i < move_history.size(); ++i) cout << move_history[i].piece<< ": "<< move_history[i].from<< " -> "<< move_history[i].to << '\n';
         
 
 
-
+        // temp_find_attrack_square = true;
         isLegalEnpassent = false;
         // empty to revalidate next to castle
         // castleMoves.empty();
