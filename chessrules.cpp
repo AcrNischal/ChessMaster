@@ -112,6 +112,23 @@ string RANKS[] = {"1", "2", "3", "4", "5", "6", "7", "8"};
 string FILES[] = {"A", "B", "C", "D", "E", "F", "G", "H"};
 
 
+// structure banako move history rakhan
+struct HistoryMoves {
+    string piece;
+    string from;
+    string to;
+};
+
+vector<HistoryMoves> move_history;
+
+// GLobal variables
+bool isLegalEnpassent = false;
+bool isLegalCastle = true;
+bool isLegalCastleQueen = true;
+bool isLegalCastleBlack = true;
+bool isLegalCastleQueenBlack = true;
+// vector<string> castleMoves;
+
 
 vector<string> filterMoveForMyPiece(vector<string> all_target_move, bool isWhite){
     vector<string> LEGALMOVE;
@@ -408,6 +425,45 @@ class PieceMove{
 
         }
 
+
+        // See castle rights
+        if(isWhite){
+            // cast;e for white
+            if(isLegalCastle){
+                // seeing empty space to validate castle
+                if(live_board["F1"]=="." && live_board["G1"]=="."){
+                    LEGALMOVE.push_back("G1");
+                    // castleMoves.push_back("G1");
+                }
+            }
+            if(isLegalCastleQueen){
+                // seeing empty space to validate castle
+                if(live_board["B1"]=="." && live_board["C1"]=="." && live_board["D1"]=="."){
+                    LEGALMOVE.push_back("C1");
+                    // castleMoves.push_back("C1");
+                }
+            }
+
+        }else{
+            // Black Castle
+            if(isLegalCastleBlack){
+                // seeing empty space to validate castle
+                if(live_board["F8"]=="." && live_board["G8"]=="."){
+                    LEGALMOVE.push_back("G8");
+                    // castleMoves.push_back("G8");
+                }
+            }
+            if(isLegalCastleQueenBlack){
+                // seeing empty space to validate castle
+                if(live_board["B8"]=="." && live_board["C8"]=="." && live_board["D8"]=="."){
+                    LEGALMOVE.push_back("C8");
+                    // castleMoves.push_back("C8");
+                }
+            }
+
+
+        }
+
         debug(LEGALMOVE);
         return LEGALMOVE;
 
@@ -445,8 +501,31 @@ class PieceMove{
             target2cap = piece_position[0]+1;
             target2cap += piece_position[1]+1;
             if(valid_board_move(target2cap) && isPiece(target2cap) && !isMyPiece(target2cap, isWhite)) LEGALMOVE.push_back(target2cap);
+
+            if(piece_position[1]=='5'){
+                if(move_history.back().piece == "p" && move_history.back().from[1] == '7' && move_history.back().to[1] == '5'){
+                    // aba move nighbor finding like E-1 left ko lagi
+                    // Left patti
+                    if(move_history.back().to[0]==piece_position[0]-1){
+                        target_move=piece_position[0]-1;
+                        target_move+=piece_position[1]+1;
+                        debug(target_move);
+                        LEGALMOVE.push_back(target_move);
+                        isLegalEnpassent = true;
+                    }
+                    // Right Patti
+                    else if(move_history.back().to[0]==piece_position[0]+1){
+                        target_move=piece_position[0]-1;
+                        target_move+=piece_position[1]+1;
+                        debug(target_move);
+                        LEGALMOVE.push_back(target_move);
+                        isLegalEnpassent = true;
+                    }
+                }
+            }
             
-        }else{
+        }
+        else{
 
             // Black move
 
@@ -476,6 +555,27 @@ class PieceMove{
             target2cap += piece_position[1]-1;
             if(valid_board_move(target2cap) && isPiece(target2cap) && !isMyPiece(target2cap, isWhite)) LEGALMOVE.push_back(target2cap);
             
+            if(piece_position[1]=='4'){
+                if(move_history.back().piece == "P" && move_history.back().from[1] == '2' && move_history.back().to[1] == '4'){
+                    // aba move nighbor finding like E+1 left ko lagi
+                    // Left patti
+                    if(move_history.back().to[0]==piece_position[0]-1){
+                        target_move=piece_position[0]-1;
+                        target_move+=piece_position[1]-1;
+                        debug(target_move);
+                        LEGALMOVE.push_back(target_move);
+                        isLegalEnpassent = true;
+                    }
+                    // Right Patti
+                    else if(move_history.back().to[0]==piece_position[0]+1){
+                        target_move=piece_position[0]+1;
+                        target_move+=piece_position[1]-1;
+                        debug(target_move);
+                        LEGALMOVE.push_back(target_move);
+                        isLegalEnpassent = true;
+                    }
+                }
+            }
             
         }
         
@@ -487,7 +587,50 @@ class PieceMove{
 
 };
 
+void castle(bool kingside, bool isWhite){
+    cout << "I am inside castle" << endl;
+    if(isWhite){
+        if(kingside){
+            cout << "I am inside castle white kingside" << endl;
 
+            // Arranging to the piece while castle
+            live_board["H1"] = ".";
+            live_board["F1"] = "R";
+            live_board["G1"] = "K";
+
+            // move_history({"o-o-o","o-o-o","o-o-o"});
+        }else{
+            cout << "I am inside castle white queen side" << endl;
+
+            // Arranging to the piece while castle
+            live_board["A1"] = ".";
+            live_board["C1"] = "K";
+            live_board["D1"] = "R";
+        }
+
+        isLegalCastle = false;
+        isLegalCastleQueen = false;
+    }else{
+        if(kingside){
+            cout << "I am inside castle black king side" << endl;
+
+            // Arranging to the piece while castle
+            live_board["H8"] = ".";
+            live_board["F8"] = "r";
+            live_board["G8"] = "k";
+        }else{
+            cout << "I am inside castle black queen side" << endl;
+
+            // Arranging to the piece while castle
+            live_board["A8"] = ".";
+            live_board["C8"] = "k";
+            live_board["D8"] = "r";
+        }
+        isLegalCastleBlack = false;
+        isLegalCastleQueenBlack = false;
+
+    }
+}
 
 void showBoard(){
     for(int i=7; i>=0; i--){
@@ -608,10 +751,25 @@ int main(){
             for(int i=0; i<=moves.size(); i++){
                 if(moves[i]==move_square){
                     live_board[move_square] = selected_piece;
+                    move_history.push_back({selected_piece, piece_square, move_square});
                     live_board[piece_square] = ".";
+                    
+                    //WHITE handling castle move
+                    if(isLegalCastle && selected_piece == "K" && move_square=="G1") castle(true, is_white_turn);
+                    if(isLegalCastleQueen && selected_piece == "K" && move_square=="C1") castle(false, is_white_turn);
+                    
+                    // Enpassent logic
+                    if(isLegalEnpassent && moves.back()==move_square){
+                        cout<<"I am inside here white " << endl;
+                        string enpassent_piece_square;
+                        enpassent_piece_square=move_square[0];
+                        enpassent_piece_square+=move_square[1]-1;
+                        live_board[enpassent_piece_square] = ".";
+                    }
                     is_white_turn = false;
+                    break;
                 }
-                else if(i==moves.size()-1 && moves[i]!=move_square) cout << "The piece you are setting to move is illigal." << endl;
+                else if(i==moves.size()-1 && moves.back()!=move_square) cout << "The piece you are setting to move is illigal." << endl;
             }
 
 
@@ -619,15 +777,52 @@ int main(){
             for(int i=0; i<=moves.size(); i++){
                 if(moves[i]==move_square){
                     live_board[move_square] = selected_piece;
+                    move_history.push_back({selected_piece, piece_square, move_square});
                     live_board[piece_square] = ".";
+                    
+                    //Black handling castle move
+                    if(isLegalCastleBlack && selected_piece == "k" && move_square=="G8") castle(true, is_white_turn);
+                    if(isLegalCastleQueenBlack && selected_piece == "k" && move_square=="C8") castle(false, is_white_turn);
+                    
+                    // Enpassent logic                    
+                    if(isLegalEnpassent && moves.back()==move_square){
+                        cout<<"I am inside here black " << endl;
+                        string enpassent_piece_square;
+                        enpassent_piece_square=move_square[0];
+                        enpassent_piece_square+=move_square[1]+1;
+                        live_board[enpassent_piece_square] = ".";
+                    }
                     is_white_turn = true;
+                    break;
                 }
-                else if(i==moves.size()-1 && moves[i]!=move_square) cout << "The piece you are setting to move is illigal." << endl;
+                else if(i==moves.size()-1 && moves.back()!=move_square) cout << "The piece you are setting to move is illigal." << endl;
             }
         }
 
+        // Adding protocol for white castle {like if i move any square mean i have touched already that piece}
+        // White
+        if(piece_square=="A1") isLegalCastleQueen = false;
+        if(piece_square=="H1") isLegalCastle = false;
+        if(piece_square=="E1"){ isLegalCastleQueen = false; isLegalCastle = false;}
+        // Black
+        if(piece_square=="A8") isLegalCastleQueenBlack = false;
+        if(piece_square=="H8") isLegalCastleBlack = false;
+        if(piece_square=="e8"){ isLegalCastleQueenBlack = false; isLegalCastleBlack = false;}
+
+
+        // showing the move history
+        for (size_t i = 0; i < move_history.size(); ++i) cout << move_history[i].piece<< ": "<< move_history[i].from<< " -> "<< move_history[i].to << '\n';
+        
+
+
+
+        isLegalEnpassent = false;
+        // empty to revalidate next to castle
+        // castleMoves.empty();
+
         // Clearing the console
         // clearConsole();
+
     }
 
 
